@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quill — typing, measured</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#09090B;--bg2:#111114;--bg3:#18181D;--a:#A78BFA;--b:#8B5CF6;--t:#F4F4F5;--t2:#85858F;--t3:#52525B;--err:#F87171;--fs:28px;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--t);font:14px/1.5 Inter,system-ui,sans-serif;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+nav{display:flex;align-items:center;justify-content:space-between;padding:20px clamp(16px,4vw,40px)}
+.logo{font-weight:600;letter-spacing:-.02em;display:flex;align-items:center;gap:8px;color:var(--t);text-decoration:none}
+.logo:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--a)}
+.links{display:flex;gap:4px}
+nav a.l{display:flex;gap:7px;align-items:center;padding:7px 12px;border-radius:8px;color:var(--t2);text-decoration:none;transition:color .15s,background .15s}
+nav a.l:hover{color:var(--t)}nav a.l.on{color:var(--t);background:var(--bg3)}
+nav svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+main{flex:1;width:100%;max-width:1000px;margin:0 auto;padding:12px clamp(16px,4vw,40px) 32px}
+.view{display:none}.view.on{display:block;animation:in .25s ease}
+@keyframes in{from{opacity:0;transform:translateY(6px)}}
+.rm *,.rm *:before{animation:none!important;transition:none!important}
+.pills{display:flex;justify-content:center;margin:6vh 0 28px}
+.pills div{display:flex;background:var(--bg2);border-radius:10px;padding:3px}
+.p{padding:6px 16px;border-radius:7px;color:var(--t2);transition:.15s;font-variant-numeric:tabular-nums}
+.p:hover{color:var(--t)}.p.on{background:var(--bg3);color:var(--a)}
+.live{display:flex;align-items:baseline;gap:28px;height:48px;opacity:.35;transition:opacity .2s;font-variant-numeric:tabular-nums}
+.live.run{opacity:1}
+.live b{font-size:34px;font-weight:500;color:var(--a);letter-spacing:-.02em}
+.live span{color:var(--t2);font-size:15px}.live span i{font-style:normal;color:var(--t);margin-left:6px}
+.box{position:relative;overflow:hidden;margin-top:8px;cursor:text}
+.sh{position:relative;transition:transform .15s ease-out}
+.ti{display:flex;flex-wrap:wrap;font:400 var(--fs)/1.7 'JetBrains Mono',ui-monospace,monospace;color:var(--t3);transition:filter .2s,opacity .2s;user-select:none}
+.box.off .ti{filter:blur(5px);opacity:.5}
+.w{margin-right:.6em;display:inline-block}.w i{font-style:normal}
+.c{color:var(--t)}.x{color:var(--err)}.e{color:var(--err);opacity:.65}
+.bad{text-decoration:underline var(--err) 2px;text-underline-offset:6px}
+.cur{position:absolute;left:0;top:0;width:2px;border-radius:1px;background:var(--a);transition:transform .09s ease-out;pointer-events:none}
+.ns .cur,.ns .sh{transition:none}
+.cur.bl{animation:bl 1.1s steps(1) infinite}@keyframes bl{50%{opacity:0}}
+.hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--t2);pointer-events:none;opacity:0;transition:opacity .2s}
+.box.off .hint{opacity:1}
+#inp{position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px;border:0;padding:0}
+.foot{margin-top:40px;display:flex;justify-content:center;gap:20px;flex-wrap:wrap;color:var(--t3);font-size:12px}
+kbd{font:inherit;background:var(--bg2);padding:1px 7px;border-radius:5px;color:var(--t2);margin-right:5px}
+h2{font-size:20px;font-weight:600;letter-spacing:-.02em;margin:12px 0 20px}
+h3{font-size:12px;font-weight:500;color:var(--t2);text-transform:uppercase;letter-spacing:.08em;margin:36px 0 12px}
+.big{display:flex;gap:56px;margin:4vh 0 24px;flex-wrap:wrap}
+.big label,.cell label{display:block;color:var(--t2);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.big b{font-size:clamp(52px,10vw,88px);font-weight:500;line-height:1.05;color:var(--a);letter-spacing:-.04em}
+.big div+div b{color:var(--t)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--bg3);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.cell{background:var(--bg2);padding:16px 18px}.cell b{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.card{background:var(--bg2);border-radius:12px;padding:20px 16px 16px}
+.ch{position:relative;height:200px;margin-left:34px;touch-action:pan-y}
+.ch svg{display:block;position:absolute;inset:0}
+.ya{position:absolute;left:-34px;color:var(--t3);font-size:11px;width:28px;text-align:right}
+.dot{position:absolute;width:9px;height:9px;margin:-4.5px;border-radius:50%;background:var(--a);box-shadow:0 0 0 4px #a78bfa30;pointer-events:none;display:none}
+.tip{position:absolute;top:-6px;background:var(--bg3);padding:4px 9px;border-radius:6px;font-size:12px;white-space:nowrap;pointer-events:none;display:none;transform:translateX(-50%)}
+.act{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.btn{padding:9px 16px;border-radius:9px;background:var(--bg3);color:var(--t);transition:.15s}.btn:hover{background:#222229}
+.btn.pri{background:var(--b)}.btn.pri:hover{filter:brightness(1.12)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.cards .cell{border-radius:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.two{grid-template-columns:1fr}.live{gap:18px}.big{gap:32px}nav a.l span{display:none}.pills{margin-top:3vh}}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:9px 8px;text-align:left;font-weight:400;border-bottom:1px solid var(--bg3)}th{color:var(--t3);font-size:12px}
+td:first-child{font-family:'JetBrains Mono',monospace;color:var(--a)}
+.bar{height:4px;border-radius:2px;background:var(--bg3);min-width:50px}.bar i{display:block;height:100%;border-radius:2px;background:var(--a)}
+.ins{list-style:none;padding:0;display:grid;gap:8px}.ins li{background:var(--bg2);padding:13px 16px;border-radius:10px;border-left:2px solid var(--b)}
+.empty{text-align:center;color:var(--t2);padding:18vh 0;line-height:1.8}
+.row{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--bg3);flex-wrap:wrap}
+.row p{color:var(--t2);font-size:13px}.row b{font-weight:500}
+.ctl{display:flex;gap:6px;align-items:center}
+.sw{width:22px;height:22px;border-radius:50%;opacity:.55;transition:.15s}.sw.on{opacity:1;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--t2)}
+.tg{width:38px;height:22px;border-radius:11px;background:var(--bg3);position:relative;transition:.2s}
+.tg:after{content:"";position:absolute;left:3px;top:3px;width:16px;height:16px;border-radius:50%;background:var(--t2);transition:.2s}
+.tg.on{background:var(--b)}.tg.on:after{left:19px;background:#fff}
+input[type=range]{accent-color:var(--b);width:150px}
+::selection{background:#8b5cf64d}
+button:focus-visible,a:focus-visible{outline:2px solid var(--a);outline-offset:2px}
+.prog{height:2px;background:var(--bg3);border-radius:1px;margin:4px 0 18px;overflow:hidden}.prog i{display:block;height:100%;width:0;background:var(--a);transition:width .1s linear}
+.pills{gap:12px;flex-wrap:wrap}.p{font-size:13px}
+.cur{box-shadow:0 0 12px var(--a)}
+.ti{animation:in .35s}
+.badge{display:inline-block;margin-left:12px;padding:2px 10px;border-radius:20px;background:#8b5cf633;color:var(--a);font-size:12px;vertical-align:middle;letter-spacing:0;text-transform:none}
+.cell,.card,.ins li{transition:background .2s}.cell:hover{background:#15151a}
+.sg{display:flex;background:var(--bg2);border-radius:8px;padding:2px}
+
+html{scroll-behavior:smooth}
+body{background:radial-gradient(900px 480px at 50% -8%,#8b5cf61c,transparent 70%),var(--bg);background-attachment:fixed}
+em{font-style:normal}
+nav{transition:opacity .4s ease;position:relative;z-index:30}
+body.typing nav{opacity:.16}body.typing nav:hover,body.typing nav:focus-within{opacity:1}
+.view.on{animation:in .4s cubic-bezier(.2,.7,.2,1)}
+.btn,.p,.sw,nav a.l,.lb,.tg,.tg:after{transition:background .2s,color .2s,transform .18s,box-shadow .2s,filter .2s,opacity .2s,left .2s}
+.btn:active,.p:active,.sw:active{transform:scale(.95)}
+.sw:hover{opacity:1;transform:scale(1.15)}
+.cell,.card{border:1px solid #ffffff09}.cell:hover{transform:translateY(-1px)}
+.cell{transition:background .2s,transform .2s}
+.cur{transition:transform .12s cubic-bezier(.2,.8,.2,1)}
+.sh{transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.w i{transition:color .1s}
+.badge{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}@keyframes pop{from{opacity:0;transform:scale(.6)}}
+.row{transition:background .2s}
+.lm{position:relative;margin-left:4px}
+.lb{display:flex;gap:7px;align-items:center;padding:7px 12px;border-radius:8px;color:var(--t2)}
+.lb:hover,.lm.open .lb{color:var(--t);background:var(--bg3)}
+nav .lb .cv{width:11px;height:11px;transition:transform .2s}.lm.open .cv{transform:rotate(180deg)}
+.menu{position:absolute;right:0;top:calc(100% + 8px);z-index:40;min-width:210px;max-height:min(70vh,420px);overflow:auto;padding:6px;background:#111114f2;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--bg3);border-radius:12px;box-shadow:0 18px 40px #0009;opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s,transform .18s,visibility .18s}
+.lm.open .menu{opacity:1;visibility:visible;transform:none}
+.menu button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:20px;padding:9px 12px;border-radius:8px;color:var(--t2);text-align:left;transition:background .15s,color .15s}
+.menu button:hover{background:var(--bg3);color:var(--t)}.menu button.on{color:var(--a)}
+.menu b{font:500 11px 'JetBrains Mono',monospace;color:var(--t3)}.menu button.on b{color:var(--a)}
+</style></head>
+<body>
+<nav><a class="logo" href="#test">quill</a><div class="links">
+<a class="l" data-v="test" href="#test"><svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg><span data-i="test">Test</span></a>
+<a class="l" data-v="stats" href="#stats"><svg viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span data-i="stats">Stats</span></a>
+<a class="l" data-v="set" href="#set"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg><span data-i="set">Settings</span></a>
+<div class="lm"><button class="lb" id="lb" aria-haspopup="true" aria-expanded="false" aria-label="Language"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg><span id="lc">EN</span><svg class="cv" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button><div class="menu" id="menu" role="menu"></div></div>
+</div></nav>
+<main>
+<section class="view" id="v-test">
+ <div id="typing">
+  <div class="pills"><div id="pills"></div></div>
+  <div class="live" id="live"><b id="l-t">30</b><span><em data-i="wpm">wpm</em><i id="l-w">0</i></span><span><em data-i="acc">acc</em><i id="l-a">100</i>%</span></div>
+  <div class="prog"><i id="pg"></i></div>
+  <div class="box off" id="box"><div class="sh" id="sh"><div class="ti" id="ti"></div><div class="cur bl" id="cur"></div></div><div class="hint" data-i="hint">Click here or press any key to focus</div></div>
+  <div class="foot"><span><kbd>tab</kbd><em data-i="nt"></em></span><span><kbd>esc</kbd><em data-i="rs"></em></span><span><kbd>ctrl</kbd><kbd>⌫</kbd><em data-i="dw"></em></span></div>
+ </div>
+ <div id="res" hidden>
+  <div class="big"><div><label data-i="wpm">wpm</label><b id="r-w">0</b></div><div><label data-i="acc">accuracy</label><b id="r-a">0</b></div></div>
+  <div class="grid" id="r-g"></div>
+  <div class="card"><div class="ch" id="r-c"></div></div>
+  <div class="act"><button class="btn" id="b-retry" data-i="rt">Retry test</button><button class="btn pri" id="b-new" data-i="nw">New test</button><button class="btn" id="b-back" data-i="bk">Back to typing</button></div>
+ </div>
+</section>
+<section class="view" id="v-stats"></section>
+<section class="view" id="v-set"></section>
+</main>
+<input id="inp" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Typing input">
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)],avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:0;
+const WL=("the be to of and a in that have I it for not on with he as you do at this but his by from they we say her she or an will my one all would there their what so up out if about who get which go me when make can like time no just him know take people into year your good some could them see other than then now look only come its over think also back after use two how our work first well way even new want because any these give day most us great little world still try ask need feel seem leave keep let begin help talk turn start might show hear play run move live believe bring happen write provide sit stand lose pay meet include continue set learn change lead understand watch follow stop create speak read allow add spend grow open walk win offer remember love consider appear buy wait serve die send expect build stay fall cut reach remain").split(" ");
+const LG={en:WL,
+es:"de la que el en y a los se del las un por con no una su para es al lo como más pero sus le ya o este sí porque esta entre cuando muy sin sobre también me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos esto antes algunos qué unos yo otro otras otra tanto esa estos mucho nada muchos cual poco ella estar estas algo nosotros año casa día tiempo vida mundo hacer ver dar decir".split(" "),
+fr:"le de un être et à il avoir ne je son que se qui ce dans en du elle au pour pas vous par sur faire plus dire me on mon lui nous comme mais pouvoir avec tout aller voir bien où sans tu ou leur homme si deux moi vouloir te femme venir quand grand celui notre devoir là jour prendre même votre rien petit encore aussi quelque dont mer année été château pâte".split(" "),
+de:"der die und in den von zu das mit sich des auf für ist im dem nicht ein eine als auch es an werden aus er hat dass sie nach wird bei einer um am sind noch wie einem über einen so zum war haben nur oder aber vor zur bis mehr durch man sein wurde sei hatte kann gegen vom können schon wenn habe seine ihre dann unter wir soll ich eines jahr zwei diese müssen schön größe".split(" "),
+nl:"de en van ik te dat die in een hij het niet zijn is was op aan met als voor had er maar om hem dan zou of wat mijn men dit zo door over ze zich bij ook tot je mij uit der daar haar naar heb hoe heeft hebben deze want nog zal me zij nu geen omdat iets worden toch al waren veel meer doen toen moet ben zonder kan hun dus alles onder ja eens hier wie werd altijd wordt kunnen ons zelf tegen na wil kon niets iemand geweest andere".split(" "),
+sk:"a v je na sa že to s z do som byť nie aj ako ale pre by si sme čo len už keď tak môj ešte rok deň dom čas život svet mesto voda práca škola priateľ slovo mama otec dobrý nový veľký malý ľudia žiť robiť vidieť hovoriť chcieť vedieť ďakujem prosím žiadny každý často všetko ráno večer mesiac týždeň srdce múdry šťastný".split(" "),
+cs:"a v je na se že to s z do jsem být ne i jak ale pro by si jsme co jen už když tak můj ještě rok den dům čas život svět město voda práce škola přítel slovo máma táta dobrý nový velký malý lidé žít dělat vidět mluvit chtít vědět děkuji prosím žádný každý často všechno ráno večer měsíc týden srdce moudrý šťastný".split(" "),
+pl:"i w nie na to się z do że jest jak ale po co tak za od już dla czy tylko być mieć rok dzień dom czas życie świat miasto woda praca szkoła przyjaciel słowo mama tata dobry nowy duży mały ludzie żyć robić widzieć mówić chcieć wiedzieć dziękuję proszę każdy często wszystko rano wieczór miesiąc tydzień serce mądry szczęśliwy".split(" "),
+it:"di e il la che è per un in non una con si da come ma le lo mi sono ha più anche del tutto questo molto essere avere fare anno giorno casa tempo vita mondo città acqua lavoro scuola amico parola madre padre buono nuovo grande piccolo persone vivere vedere parlare volere sapere grazie prego ogni spesso mattina sera mese settimana cuore saggio felice".split(" "),
+pt:"de a o que e do da em um para é com não uma os no se na por mais as dos como mas foi ao ele das tem à seu sua ou ser quando muito há já está eu também só pelo ano dia casa tempo vida mundo cidade água trabalho escola amigo palavra mãe pai bom novo grande pequeno pessoas viver fazer ver falar querer saber obrigado favor cada sempre manhã noite mês semana coração feliz".split(" ")};
+const LN={en:"English",es:"Español",fr:"Français",de:"Deutsch",nl:"Nederlands",sk:"Slovenčina",cs:"Čeština",pl:"Polski",it:"Italiano",pt:"Português"};
+const KEYS="test stats set hint nt rs dw wpm acc raw con pk ch cor inc du rt nw bk nb ins wh ah wk mw emp tst aw bw aa ct key err word wr ri nok nmw acn fs dd snd smc red pun rst rb cf cl lang".split(" ");
+const DICT=Object.fromEntries(Object.entries({
+en:"Test|Stats|Settings|Click here or press any key to focus|new test|reset|delete word|wpm|accuracy|Raw WPM|Consistency|Peak WPM|Characters|Correct|Incorrect|Duration|Retry test|New test|Back to typing|new best|Insights|WPM history|Accuracy history|Weakest keys|Most mistyped words|No tests yet.<br>Finish one and your analytics will show up here.|Tests|Average WPM|Best WPM|Average accuracy|Characters typed|Key|Errors|Word|Wrong|Right|Not enough key data yet.|No mistyped words yet.|Accent colour|Typing font size|Default test duration|Sound effects|Smooth cursor|Reduced motion|Punctuation|Reset statistics|Reset|Click again to confirm|Cleared|Language",
+sk:"Test|Štatistiky|Nastavenia|Kliknite sem alebo stlačte ľubovoľný kláves|nový test|reset|zmazať slovo|wpm|presnosť|Hrubé WPM|Stálosť|Maximálne WPM|Znaky|Správne|Nesprávne|Trvanie|Zopakovať test|Nový test|Späť na písanie|nový rekord|Postrehy|História WPM|História presnosti|Najslabšie klávesy|Najčastejšie chybné slová|Zatiaľ žiadne testy.<br>Dokončite jeden a tu sa zobrazia vaše štatistiky.|Testy|Priemerné WPM|Najlepšie WPM|Priemerná presnosť|Napísané znaky|Kláves|Chyby|Slovo|Zle|Správne|Zatiaľ nedostatok údajov o klávesoch.|Zatiaľ žiadne chybné slová.|Farba zvýraznenia|Veľkosť písma|Predvolené trvanie testu|Zvukové efekty|Plynulý kurzor|Obmedzený pohyb|Interpunkcia|Vynulovať štatistiky|Vynulovať|Kliknite znova na potvrdenie|Vymazané|Jazyk",
+cs:"Test|Statistiky|Nastavení|Klikněte sem nebo stiskněte libovolnou klávesu|nový test|reset|smazat slovo|wpm|přesnost|Hrubé WPM|Stálost|Maximální WPM|Znaky|Správně|Nesprávně|Délka|Opakovat test|Nový test|Zpět k psaní|nový rekord|Postřehy|Historie WPM|Historie přesnosti|Nejslabší klávesy|Nejčastěji chybná slova|Zatím žádné testy.<br>Dokončete jeden a zde se zobrazí vaše statistiky.|Testy|Průměrné WPM|Nejlepší WPM|Průměrná přesnost|Napsané znaky|Klávesa|Chyby|Slovo|Špatně|Správně|Zatím málo dat o klávesách.|Zatím žádná chybná slova.|Barva zvýraznění|Velikost písma|Výchozí délka testu|Zvukové efekty|Plynulý kurzor|Omezený pohyb|Interpunkce|Vynulovat statistiky|Vynulovat|Kliknutím potvrďte|Vymazáno|Jazyk",
+pl:"Test|Statystyki|Ustawienia|Kliknij tutaj lub naciśnij dowolny klawisz|nowy test|reset|usuń słowo|wpm|dokładność|Surowe WPM|Stabilność|Maks. WPM|Znaki|Poprawne|Błędne|Czas|Powtórz test|Nowy test|Wróć do pisania|nowy rekord|Wnioski|Historia WPM|Historia dokładności|Najsłabsze klawisze|Najczęściej błędne słowa|Brak testów.<br>Ukończ jeden, a tutaj pojawią się statystyki.|Testy|Średnie WPM|Najlepsze WPM|Średnia dokładność|Wpisane znaki|Klawisz|Błędy|Słowo|Źle|Dobrze|Za mało danych o klawiszach.|Brak błędnych słów.|Kolor akcentu|Rozmiar czcionki|Domyślny czas testu|Efekty dźwiękowe|Płynny kursor|Ograniczone animacje|Interpunkcja|Resetuj statystyki|Resetuj|Kliknij ponownie, aby potwierdzić|Wyczyszczono|Język",
+de:"Test|Statistik|Einstellungen|Hier klicken oder eine Taste drücken|neuer Test|zurücksetzen|Wort löschen|wpm|Genauigkeit|Rohe WPM|Konstanz|Spitzen-WPM|Zeichen|Richtig|Falsch|Dauer|Test wiederholen|Neuer Test|Zurück zum Tippen|neue Bestmarke|Erkenntnisse|WPM-Verlauf|Genauigkeitsverlauf|Schwächste Tasten|Am häufigsten vertippte Wörter|Noch keine Tests.<br>Beende einen, dann erscheinen hier deine Auswertungen.|Tests|Ø WPM|Beste WPM|Ø Genauigkeit|Getippte Zeichen|Taste|Fehler|Wort|Falsch|Richtig|Noch zu wenige Tastendaten.|Noch keine vertippten Wörter.|Akzentfarbe|Schriftgröße|Standarddauer|Soundeffekte|Weicher Cursor|Weniger Bewegung|Satzzeichen|Statistik zurücksetzen|Zurücksetzen|Zum Bestätigen erneut klicken|Gelöscht|Sprache",
+es:"Test|Estadísticas|Ajustes|Haz clic aquí o pulsa cualquier tecla|nuevo test|reiniciar|borrar palabra|ppm|precisión|PPM brutas|Constancia|PPM máximas|Caracteres|Correctas|Incorrectas|Duración|Repetir test|Nuevo test|Volver a escribir|nuevo récord|Observaciones|Historial de PPM|Historial de precisión|Teclas más débiles|Palabras más falladas|Aún no hay tests.<br>Termina uno y tus estadísticas aparecerán aquí.|Tests|PPM media|Mejor PPM|Precisión media|Caracteres escritos|Tecla|Errores|Palabra|Mal|Bien|Aún faltan datos de teclas.|Aún no hay palabras falladas.|Color de acento|Tamaño de letra|Duración predeterminada|Efectos de sonido|Cursor suave|Menos movimiento|Puntuación|Borrar estadísticas|Borrar|Haz clic de nuevo para confirmar|Borrado|Idioma",
+fr:"Test|Statistiques|Réglages|Cliquez ici ou appuyez sur une touche|nouveau test|réinitialiser|effacer le mot|mpm|précision|MPM brut|Régularité|MPM max|Caractères|Corrects|Incorrects|Durée|Refaire le test|Nouveau test|Retour à la saisie|nouveau record|Analyses|Historique MPM|Historique de précision|Touches les plus faibles|Mots les plus ratés|Aucun test pour l’instant.<br>Terminez-en un et vos statistiques apparaîtront ici.|Tests|MPM moyen|Meilleur MPM|Précision moyenne|Caractères saisis|Touche|Erreurs|Mot|Faux|Juste|Pas encore assez de données.|Aucun mot raté pour l’instant.|Couleur d’accent|Taille de police|Durée par défaut|Effets sonores|Curseur fluide|Moins d’animations|Ponctuation|Réinitialiser les statistiques|Réinitialiser|Cliquez à nouveau pour confirmer|Effacé|Langue",
+nl:"Test|Statistieken|Instellingen|Klik hier of druk op een toets|nieuwe test|resetten|woord wissen|wpm|nauwkeurigheid|Ruwe WPM|Consistentie|Piek-WPM|Tekens|Juist|Onjuist|Duur|Test herhalen|Nieuwe test|Terug naar typen|nieuw record|Inzichten|WPM-verloop|Nauwkeurigheidsverloop|Zwakste toetsen|Vaakst foute woorden|Nog geen tests.<br>Rond er één af en je statistieken verschijnen hier.|Tests|Gemiddelde WPM|Beste WPM|Gemiddelde nauwkeurigheid|Getypte tekens|Toets|Fouten|Woord|Fout|Goed|Nog te weinig toetsdata.|Nog geen foute woorden.|Accentkleur|Lettergrootte|Standaardduur|Geluidseffecten|Vloeiende cursor|Minder beweging|Leestekens|Statistieken wissen|Wissen|Klik nogmaals om te bevestigen|Gewist|Taal",
+it:"Test|Statistiche|Impostazioni|Clicca qui o premi un tasto|nuovo test|reset|cancella parola|ppm|precisione|PPM grezze|Costanza|PPM massime|Caratteri|Corretti|Errati|Durata|Ripeti test|Nuovo test|Torna a scrivere|nuovo record|Approfondimenti|Storico PPM|Storico precisione|Tasti più deboli|Parole più sbagliate|Ancora nessun test.<br>Completane uno e le statistiche appariranno qui.|Test|PPM medie|Migliori PPM|Precisione media|Caratteri digitati|Tasto|Errori|Parola|Sbagliato|Giusto|Dati sui tasti insufficienti.|Nessuna parola sbagliata.|Colore principale|Dimensione del testo|Durata predefinita|Effetti sonori|Cursore fluido|Meno animazioni|Punteggiatura|Azzera statistiche|Azzera|Clicca ancora per confermare|Azzerato|Lingua",
+pt:"Teste|Estatísticas|Definições|Clique aqui ou prima uma tecla|novo teste|repor|apagar palavra|ppm|precisão|PPM brutas|Consistência|PPM máximas|Caracteres|Corretos|Incorretos|Duração|Repetir teste|Novo teste|Voltar a escrever|novo recorde|Perceções|Histórico de PPM|Histórico de precisão|Teclas mais fracas|Palavras mais erradas|Ainda sem testes.<br>Conclua um e as estatísticas aparecem aqui.|Testes|PPM médias|Melhores PPM|Precisão média|Caracteres escritos|Tecla|Erros|Palavra|Errado|Certo|Dados de teclas insuficientes.|Sem palavras erradas.|Cor de destaque|Tamanho da letra|Duração predefinida|Efeitos sonoros|Cursor suave|Menos movimento|Pontuação|Repor estatísticas|Repor|Clique novamente para confirmar|Limpo|Idioma"
+}).map(([l,s])=>[l,s.split("|")]));
+const tr=k=>{const i=KEYS.indexOf(k);return(DICT[S.lang]||DICT.en)[i]||DICT.en[i]},cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+function i18n(){document.documentElement.lang=S.lang;$$('[data-i]').forEach(e=>e.textContent=tr(e.dataset.i));$('#lc').textContent=S.lang.toUpperCase();
+ $('#menu').innerHTML=Object.keys(LG).map(l=>`<button role="menuitem" data-l="${l}" class="${l===S.lang?'on':''}"><span>${LN[l]}</span><b>${l.toUpperCase()}</b></button>`).join('')}
+function setLang(l){S.lang=l;save();closeMenu();apply();route()}
+const ACC={violet:['#A78BFA','#8B5CF6'],indigo:['#818CF8','#6366F1'],fuchsia:['#E879F9','#C026D3'],sky:['#7DD3FC','#38BDF8']};
+let S={lang:'en',dur:30,fs:28,sound:false,smooth:true,reduce:false,accent:'violet',punct:false};
+try{Object.assign(S,JSON.parse(localStorage.getItem('quill:s')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('quill:s',JSON.stringify(S))}catch(e){}};
+/* ---------- storage layer (swap this object for a cloud backend later) ---------- */
+const Store=(()=>{let db;const open=()=>db||(db=new Promise((ok,no)=>{const q=indexedDB.open('quill',1);q.onupgradeneeded=()=>q.result.createObjectStore('tests',{keyPath:'id',autoIncrement:true});q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)}));
+const tx=async(m,f)=>{const d=await open();return new Promise((ok,no)=>{const t=d.transaction('tests',m),r=f(t.objectStore('tests'));t.oncomplete=()=>ok(r.result);t.onerror=()=>no(t.error)})};
+return{add:o=>tx('readwrite',s=>s.add(o)),all:()=>tx('readonly',s=>s.getAll()),clear:()=>tx('readwrite',s=>s.clear())}})();
+/* ---------- helpers ---------- */
+function apply(){const r=document.documentElement.style,a=ACC[S.accent]||ACC.violet;r.setProperty('--a',a[0]);r.setProperty('--b',a[1]);r.setProperty('--fs',S.fs+'px');document.body.classList.toggle('rm',S.reduce||matchMedia('(prefers-reduced-motion:reduce)').matches);document.body.classList.toggle('ns',!S.smooth);i18n();fit()}
+let ac;function click(){if(!S.sound)return;try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=900;g.gain.setValueAtTime(.04,ac.currentTime);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.04);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.045)}catch(e){}}
+function cu(el,v,sfx=''){if(document.body.classList.contains('rm')){el.textContent=v+sfx;return}const t0=performance.now();(function f(n){const p=Math.min(1,(n-t0)/600);el.textContent=Math.round(v*10*(1-Math.pow(1-p,3)))/10+sfx;if(p<1)requestAnimationFrame(f)})(t0)}
+function chart(el,v,tip){const W=el.clientWidth||500,H=200,n=v.length,mx=Math.max(...v,1),mn=Math.min(...v,0),lo=mn>0&&n>1?Math.floor(mn*.8):0,hi=Math.ceil(mx*1.1),X=i=>n>1?i/(n-1)*W:W/2,Y=x=>H-8-(x-lo)/(hi-lo||1)*(H-16);
+let d='M'+X(0)+' '+Y(v[0]);for(let i=1;i<n;i++){const m=(X(i-1)+X(i))/2;d+=`C${m} ${Y(v[i-1])},${m} ${Y(v[i])},${X(i)} ${Y(v[i])}`}
+const grid=[0,.5,1].map(f=>`<line x1="0" x2="${W}" y1="${Y(lo+(hi-lo)*f)}" y2="${Y(lo+(hi-lo)*f)}" stroke="#18181D"/>`).join('');
+el.innerHTML=`<span class="ya" style="top:0">${hi}</span><span class="ya" style="bottom:0">${lo}</span><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A78BFA" stop-opacity=".22"/><stop offset="1" stop-color="#A78BFA" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${d}L${X(n-1)} ${H}L0 ${H}Z" fill="url(#g)" style="animation:in .9s both"/><path d="${d}" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" pathLength="1" style="stroke-dasharray:1;animation:dr 1s ease-out both"/></svg><div class="dot"></div><div class="tip"></div>`;
+if(!$('#dr'))document.head.insertAdjacentHTML('beforeend','<style id="dr">@keyframes dr{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}</style>');
+const dot=el.querySelector('.dot'),tp=el.querySelector('.tip');
+const mv=e=>{const r=el.getBoundingClientRect(),i=Math.max(0,Math.min(n-1,Math.round((e.clientX-r.left)/r.width*(n-1))));dot.style.cssText=`display:block;left:${X(i)}px;top:${Y(v[i])}px`;tp.style.cssText=`display:block;left:${Math.max(50,Math.min(W-50,X(i)))}px`;tp.textContent=tip(i,v[i])};
+el.onpointermove=mv;el.onpointerdown=mv;el.onpointerleave=()=>{dot.style.display=tp.style.display='none'}}
+/* ---------- typing engine ---------- */
+const inp=$('#inp'),box=$('#box'),sh=$('#sh'),ti=$('#ti'),cur=$('#cur');
+let words=[],typed=[],wi=0,state='idle',t0=0,timer,samples=[],keys={},wst={},lastT=0,wStart=0,ks=0,kc=0,lks=0,cw=0,tc=0,lh=48,bt,last=null,view='test';
+const dur=()=>S.dur;
+const gen=n=>{const o=[];let p='',cp=false;while(o.length<n){const L=LG[S.lang]||WL;let w=L[Math.random()*L.length|0];if(w===p)continue;p=w;if(S.punct){if(cp){w=w[0].toUpperCase()+w.slice(1);cp=false}const r=Math.random();if(r<.08){w+='.';cp=true}else if(r<.2)w+=','}o.push(w)}return o};
+const wh=w=>'<div class="w">'+[...w].map(c=>'<i>'+c+'</i>').join('')+'</div>';
+function build(list){words=list;typed=words.map(()=>'');wi=0;ti.innerHTML=words.map(wh).join('');fit()}
+function more(){if(wi>words.length-40){const m=gen(60);words.push(...m);m.forEach(()=>typed.push(''));ti.insertAdjacentHTML('beforeend',m.map(wh).join(''))}}
+function fit(){const f=ti.children[0];if(!f)return;lh=f.offsetHeight||48;box.style.height=lh*3+'px';pos()}
+function pos(){const el=ti.children[wi];if(!el)return;const ch=el.children,t=typed[wi].length;let x;
+ if(t<ch.length)x=ch[t].offsetLeft;else{const l=ch[ch.length-1];x=l.offsetLeft+l.offsetWidth}
+ const y=el.offsetTop,line=Math.round(y/lh);sh.style.transform='translateY('+(-Math.max(0,line-1)*lh)+'px)';
+ cur.style.transform='translate('+(x-1)+'px,'+(y+lh*.18)+'px)';cur.style.height=lh*.64+'px'}
+function paint(i){const el=ti.children[i],w=words[i],t=typed[i];while(el.children.length>w.length)el.lastChild.remove();
+ for(let j=0;j<w.length;j++)el.children[j].className=j<t.length?(t[j]===w[j]?'c':'x'):'';
+ for(let j=w.length;j<t.length;j++){const s=document.createElement('i');s.textContent=t[j];s.className='e';el.append(s)}
+ el.classList.toggle('bad',i<wi&&t!==w)}
+function curOK(){const w=words[wi],t=typed[wi];let n=0;for(let j=0;j<t.length;j++)if(t[j]===w[j])n++;return n}
+function reset(same){clearInterval(timer);state='idle';document.body.classList.remove('typing');samples=[];keys={};wst={};lastT=wStart=ks=kc=lks=cw=tc=0;
+ $('#res').hidden=true;$('#typing').hidden=false;$('#live').classList.remove('run');
+ $('#pg').style.width='0';$('#l-t').textContent=dur();$('#l-w').textContent=0;$('#l-a').textContent=100;
+ $$('#pills .p').forEach(b=>b.classList.toggle('on',+b.dataset.d===S.dur));
+ build(same&&last?last:gen(S.dur>=60?260:160));last=words.slice();cur.classList.add('bl');sh.style.transform='';foc()}
+function foc(){if(view==='test'&&state!=='done')inp.focus({preventScroll:true})}
+function start(now){state='run';document.body.classList.add('typing');t0=now;$('#live').classList.add('run');timer=setInterval(tick,100)}
+function sample(){const el=Math.min(dur(),(performance.now()-t0)/1000);samples.push({w:el>=1?Math.round((cw+curOK())/5/(Math.floor(samples.length+1)/60)):0,r:(ks-lks)*12});lks=ks}
+function tick(){const el=(performance.now()-t0)/1000;if(el>=dur())return finish();
+ $('#l-t').textContent=Math.ceil(dur()-el);$('#pg').style.width=el/dur()*100+'%';if(Math.floor(el)>samples.length)sample();
+ if(el>=1){$('#l-w').textContent=Math.round((cw+curOK())/5/(el/60));$('#l-a').textContent=ks?Math.round(kc/ks*100):100}}
+function key(c){if(state==='done')return;const now=performance.now();if(state==='idle')start(now);
+ cur.classList.remove('bl');clearTimeout(bt);bt=setTimeout(()=>cur.classList.add('bl'),700);
+ const w=words[wi],t=typed[wi];
+ if(c===' '){if(!t)return;ks++;kc++;tc+=t.length+1;if(t===w)cw+=w.length+1;const s=wst[w]||(wst[w]=[0,0,0]);t===w?s[0]++:s[1]++;s[2]+=Math.round(now-wStart);wi++;more();paint(wi-1);pos();click();lastT=now;return}
+ if(t.length>=w.length+8)return;
+ if(!t)wStart=now;const exp=w[t.length],ok=c===exp,k=(exp||c).toLowerCase();
+ if(/\p{L}/u.test(k)){const a=keys[k]||(keys[k]=[0,0,0,0]);a[0]++;if(!ok)a[1]++;if(lastT&&now-lastT<2000){a[2]+=Math.round(now-lastT);a[3]++}}
+ ks++;if(ok)kc++;lastT=now;typed[wi]+=c;paint(wi);pos();click()}
+function back(){const t=typed[wi];if(!t)return;typed[wi]=t.slice(0,-1);paint(wi);pos();click()}
+inp.addEventListener('beforeinput',e=>{e.preventDefault();if(view!=='test'||state==='done')return;const k=e.inputType;
+ if(k==='insertText'&&e.data)for(const c of e.data)key(c);else if(k==='deleteContentBackward')back();else if(k==='deleteWordBackward'){typed[wi]='';paint(wi);pos()}});
+inp.addEventListener('input',()=>{inp.value=''});
+inp.addEventListener('focus',()=>box.classList.remove('off'));inp.addEventListener('blur',()=>box.classList.add('off'));
+function finish(){clearInterval(timer);if(samples.length<dur())sample();state='done';document.body.classList.remove('typing');
+ const cor=cw+curOK();let bad=0;for(let i=0;i<=wi;i++){const w=words[i],t=typed[i];for(let j=0;j<Math.max(w.length,t.length);j++)if(t[j]!==w[j]&&(i<wi||j<t.length))bad++}
+ const m=dur()/60,wpm=Math.round(cor/5/m),raw=Math.round((tc+typed[wi].length)/5/m),acc=ks?Math.round(kc/ks*1000)/10:0;
+ const ins=samples.map(s=>s.r),mu=avg(ins),sd=Math.sqrt(avg(ins.map(x=>(x-mu)**2))),cons=mu?Math.max(0,Math.round(100-sd/mu*100)):0,peak=Math.max(...samples.map(s=>s.w));
+ const rec={ts:Date.now(),dur:dur(),wpm,raw,acc,cons,chars:ks,cor,bad,peak,samples,keys,words:wst};
+ $$('.badge').forEach(b=>b.remove());Store.all().then(a=>{if(a.length&&wpm>Math.max(...a.map(t=>t.wpm)))$('#r-w').insertAdjacentHTML('afterend','<span class="badge">'+tr('nb')+'</span>')}).catch(()=>{}).then(()=>Store.add(rec)).catch(()=>{});
+ $('#typing').hidden=true;$('#res').hidden=false;$('#res').style.animation='in .3s';inp.blur();
+ cu($('#r-w'),wpm);cu($('#r-a'),acc,'%');
+ $('#r-g').innerHTML=[[tr('raw'),raw],[tr('con'),cons+'%'],[tr('pk'),peak],[tr('ch'),ks],[tr('cor'),cor],[tr('inc'),bad],[tr('du'),dur()+'s']].map(x=>`<div class="cell"><label>${x[0]}</label><b>${x[1]}</b></div>`).join('');
+ chart($('#r-c'),samples.map(s=>s.w),(i,v)=>`${i+1}s · ${v} wpm`)}
+addEventListener('keydown',e=>{if(view!=='test')return;
+ if(e.key==='Tab'||e.key==='Escape'){e.preventDefault();reset()}
+ else if(e.key==='Enter'&&state==='done'){e.preventDefault();reset()}
+ else if(state!=='done'&&document.activeElement!==inp&&e.key.length===1&&!e.ctrlKey&&!e.metaKey)foc()});
+document.addEventListener('click',e=>{if(view==='test'&&!e.target.closest('button,a'))foc()});
+$('#b-retry').onclick=()=>reset(true);$('#b-new').onclick=()=>reset();$('#b-back').onclick=()=>{reset();foc()};
+$('#pills').innerHTML=[15,30,60,120].map(d=>`<button class="p" data-d="${d}">${d}</button>`).join('');
+$('#pills').onclick=e=>{const d=e.target.dataset.d;if(d){S.dur=+d;save();reset();$('#l-t').textContent=d}};
+const lm=$('.lm'),lb=$('#lb'),closeMenu=()=>{lm.classList.remove('open');lb.setAttribute('aria-expanded','false')};
+lb.onclick=e=>{e.stopPropagation();const o=lm.classList.toggle('open');lb.setAttribute('aria-expanded',o);if(o)inp.blur()};
+$('#menu').onclick=e=>{const b=e.target.closest('button');if(b)setLang(b.dataset.l)};
+document.addEventListener('click',e=>{if(!e.target.closest('.lm'))closeMenu()});
+addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu()});
+
+/* ---------- analytics ---------- */
+function insights(T,K,Wd){const o=[],ks_=Object.entries(K).filter(([k,a])=>a[0]>=20).map(([k,a])=>({k:k.toUpperCase(),acc:100-a[1]/a[0]*100,ms:a[3]?a[2]/a[3]:0}));
+ const wk=ks_.filter(x=>x.acc<96).sort((a,b)=>a.acc-b.acc).slice(0,3);
+ if(wk.length)o.push(`You make the most mistakes on ${wk.map(x=>x.k+' ('+Math.round(x.acc)+'%)').join(', ')}.`);
+ else if(ks_.length)o.push('Every key with enough data is at 96% accuracy or higher.');
+ const sl=ks_.filter(x=>x.ms).sort((a,b)=>b.ms-a.ms)[0],all=avg(ks_.filter(x=>x.ms).map(x=>x.ms));
+ if(sl&&sl.ms>all*1.15)o.push(`${sl.k} is your slowest key: ${Math.round(sl.ms)} ms between presses against ${Math.round(all)} ms on average.`);
+ if(T.length>=6){const k=Math.min(10,Math.floor(T.length/2)),a=avg(T.slice(-k).map(t=>t.acc)),b=avg(T.slice(-2*k,-k).map(t=>t.acc)),d=a-b;
+  o.push(Math.abs(d)<.5?`Your accuracy is steady over your last ${k} tests (${a.toFixed(1)}%).`:`Your accuracy ${d>0?'improved':'dropped'} by ${Math.abs(d).toFixed(1)} points over your last ${k} tests compared with the ${k} before.`)}
+ const L=T.filter(t=>t.dur>=30&&t.samples.length>=30);
+ if(L.length){const f=avg(L.map(t=>avg(t.samples.slice(0,t.samples.length>>1).map(s=>s.r)))),s=avg(L.map(t=>avg(t.samples.slice(t.samples.length>>1).map(s=>s.r)))),d=(s-f)/f*100;
+  if(d<-8)o.push(`Your speed drops by about ${Math.round(-d)}% in the second half of longer tests.`);else if(d>8)o.push(`You speed up by about ${Math.round(d)}% in the second half of longer tests.`);else o.push('Your pace stays even through longer tests.')}
+ const cm=new Set(WL.slice(0,40)),g=(f)=>{let a=0,b=0;for(const w in Wd)if(f(w)){a+=Wd[w][0];b+=Wd[w][1]}return a+b>=30?a/(a+b)*100:null},c1=g(w=>cm.has(w)),c2=g(w=>!cm.has(w));
+ if(c1!=null&&c2!=null&&Math.abs(c1-c2)>=2)o.push(c1>c2?`You are more accurate on common words (${Math.round(c1)}%) than on the rest (${Math.round(c2)}%).`:`Surprisingly, common words (${Math.round(c1)}%) trip you up more than the rest (${Math.round(c2)}%).`);
+ if(!o.length)o.push('Complete a few more tests to unlock insights.');return o}
+async function renderStats(){const el=$('#v-stats');let T=[];try{T=await Store.all()}catch(e){}
+ if(!T.length){el.innerHTML='<div class="empty">'+tr('emp')+'</div>';return}
+ const K={},Wd={};T.forEach(t=>{for(const k in t.keys){const a=K[k]||(K[k]=[0,0,0,0]),b=t.keys[k];for(let i=0;i<4;i++)a[i]+=b[i]}for(const w in t.words){const a=Wd[w]||(Wd[w]=[0,0,0]),b=t.words[w];for(let i=0;i<3;i++)a[i]+=b[i]}});
+ const best=Math.max(...T.map(t=>t.wpm)),C=[[tr('tst'),T.length],[tr('aw'),Math.round(avg(T.map(t=>t.wpm)))],[tr('bw'),best],[tr('aa'),avg(T.map(t=>t.acc)).toFixed(1)+'%'],[tr('ct'),T.reduce((s,t)=>s+t.chars,0).toLocaleString(S.lang)]];
+ const wk=Object.entries(K).filter(([k,a])=>a[0]>=10).map(([k,a])=>({k,acc:100-a[1]/a[0]*100,err:a[1],ms:a[3]?Math.round(a[2]/a[3]):0})).sort((a,b)=>a.acc-b.acc||b.err-a.err).slice(0,8);
+ const ww=Object.entries(Wd).filter(([w,a])=>a[1]>0).map(([w,a])=>({w,bad:a[1],ok:a[0],acc:a[0]/(a[0]+a[1])*100,ms:Math.round(a[2]/(a[0]+a[1]))})).sort((a,b)=>b.bad-a.bad||a.acc-b.acc).slice(0,8);
+ const row=x=>`<tr>${x.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+ el.innerHTML=`<h2>${tr('stats')}</h2><div class="cards">${C.map(c=>`<div class="cell"><label>${c[0]}</label><b>${c[1]}</b></div>`).join('')}</div>
+ <h3>${tr('ins')}</h3><ul class="ins">${insights(T,K,Wd).map(s=>`<li>${s}</li>`).join('')}</ul>
+ <div class="two"><div><h3>${tr('wh')}</h3><div class="card"><div class="ch" id="h1"></div></div></div><div><h3>${tr('ah')}</h3><div class="card"><div class="ch" id="h2"></div></div></div></div>
+ <div class="two"><div><h3>${tr('wk')}</h3><div class="card">${wk.length?`<table><tr><th>${tr('key')}</th><th>${cap(tr('acc'))}</th><th></th><th>${tr('err')}</th><th>ms</th></tr>${wk.map(x=>row([x.k.toUpperCase(),x.acc.toFixed(1)+'%',`<div class="bar"><i style="width:${x.acc}%"></i></div>`,x.err,x.ms||'–'])).join('')}</table>`:`<p style="color:var(--t2)">${tr('nok')}</p>`}</div></div>
+ <div><h3>${tr('mw')}</h3><div class="card">${ww.length?`<table><tr><th>${tr('word')}</th><th>${tr('wr')}</th><th>${tr('ri')}</th><th>${cap(tr('acc'))}</th><th>ms</th></tr>${ww.map(x=>row([x.w,x.bad,x.ok,Math.round(x.acc)+'%',x.ms])).join('')}</table>`:`<p style="color:var(--t2)">${tr('nmw')}</p>`}</div></div></div>`;
+ const H=T.slice(-60),dt=i=>new Date(H[i].ts).toLocaleDateString(S.lang);
+ const draw=()=>{if(view!=='stats'||!$('#h1'))return;chart($('#h1'),H.map(t=>t.wpm),(i,v)=>`${dt(i)} · ${v} wpm`);chart($('#h2'),H.map(t=>Math.round(t.acc*10)/10),(i,v)=>`${dt(i)} · ${v}%`)};
+ draw();renderStats.draw=draw}
+/* ---------- settings ---------- */
+function renderSet(){const R=(l,d,c)=>`<div class="row"><div><b>${l}</b><p>${d}</p></div><div class="ctl">${c}</div></div>`,tg=k=>`<button class="tg ${S[k]?'on':''}" data-t="${k}" aria-label="toggle"></button>`;
+ $('#v-set').innerHTML='<h2>'+tr('set')+'</h2>'
+ +R(tr('acn'),'',Object.keys(ACC).map(k=>`<button class="sw ${S.accent===k?'on':''}" data-a="${k}" style="background:${ACC[k][0]}" title="${k}"></button>`).join(''))
+ +R(tr('fs'),S.fs+'px',`<input type="range" min="18" max="40" value="${S.fs}" id="fs">`)
+ +R(tr('dd'),'',`<div class="sg">${[15,30,60,120].map(d=>`<button class="p ${S.dur===d?'on':''}" data-d="${d}">${d}s</button>`).join('')}</div>`)
+ +R(tr('pun'),'Aa, bb.',tg('punct'))
+ +R(tr('snd'),'',tg('sound'))
+ +R(tr('smc'),'',tg('smooth'))
+ +R(tr('red'),'',tg('reduce'))
+ +R(tr('rst'),'',`<button class="btn" id="rs">${tr('rb')}</button>`)}
+$('#v-set').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
+ if(t.dataset.a)S.accent=t.dataset.a;else if(t.dataset.t)S[t.dataset.t]=!S[t.dataset.t];else if(t.dataset.d)S.dur=+t.dataset.d;
+ else if(t.id==='rs'){if(t.dataset.c){Store.clear().catch(()=>{});t.textContent=tr('cl');delete t.dataset.c}else{t.dataset.c=1;t.textContent=tr('cf');setTimeout(()=>{if(t.dataset.c){delete t.dataset.c;t.textContent=tr('rb')}},3000)}return}
+ else return;save();apply();renderSet()});
+$('#v-set').addEventListener('input',e=>{if(e.target.id==='fs'){S.fs=+e.target.value;e.target.closest('.row').querySelector('p').textContent=S.fs+'px';save();apply()}});
+/* ---------- routing ---------- */
+function route(){const h=location.hash.slice(1);view=['stats','set'].includes(h)?h:'test';
+ $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+view));$$('nav a.l').forEach(a=>a.classList.toggle('on',a.dataset.v===view));
+ if(view==='test'){reset();foc()}else{clearInterval(timer);state='idle';document.body.classList.remove('typing');inp.blur();if(view==='stats')renderStats();else renderSet()}}
+addEventListener('hashchange',route);addEventListener('resize',()=>{fit();if(view==='stats'&&renderStats.draw)renderStats.draw()});
+apply();route();document.fonts&&document.fonts.ready.then(fit);
+</script></body></html>
